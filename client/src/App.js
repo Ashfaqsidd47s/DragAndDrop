@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./app.css";
+import axios from "axios";
 
 function App() {
 
   const alphaList = ["A","B","C","D","E"];
   const symbols = ["+","-","*","/"];
-  const alphaValue = [1,2,3,4,5];
+  const [alphaValue,setAlphaValue] = useState([]);
   const [dragItem, setDragItem] = useState(null);
   const [dragOverItem, setDragOverItem] = useState(-1);
   const [isSymbol, setIsSymbol] = useState(false);
@@ -15,6 +16,19 @@ function App() {
   const [finalSymbol, setFinalSymbol] = useState(0);
   let finalEquation = equation.join();
   finalEquation = finalEquation.replace(/,/g, '');
+
+  //fetching arraylist from mongodb server
+  useEffect(()=>{
+    const fetchData = async ()=>{
+      try {
+        const res = await axios.get("http://localhost:8800/636e6766add6f2fb7215bccb");
+        setAlphaValue(res.data.numArr);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    fetchData();
+  },[])
 
   //override the default drag and drop states
   const overrideEventDefaults =(e)=>{
@@ -58,31 +72,30 @@ function App() {
   }
 
   const handelEvaluate = (e)=>{ 
-  alphaValue.map((item, index)=>(
-    finalEquation = finalEquation.replaceAll(alphaList[index], item)
-  ))
-  console.log("clculating ..",finalEquation);
-  // eslint-disable-next-line
-  try {
+    alphaValue.map((item, index)=>(
+      finalEquation = finalEquation.replaceAll(alphaList[index], item)
+    ))
     // eslint-disable-next-line
-    eval(finalEquation);
-  } catch (err) {
-    window.alert("prease provide a valid equation ");
-    return
-  }
-  if(finalSymbol === 1){
-    // eslint-disable-next-line
-    const result = eval(finalEquation) < rhs;
-    window.alert("the result is - " + result );
-  }
-  if(finalSymbol === 2){
-    // eslint-disable-next-line
-    const result = eval(finalEquation) > rhs;
-    window.alert("the result is - " + result );
-  }
-  if(finalSymbol ===0){
-    window.alert("please provide the comparizon symbol (< >)");
-  }
+    try {
+      // eslint-disable-next-line
+      eval(finalEquation);
+    } catch (err) {
+      window.alert("prease provide a valid equation ");
+      return
+    }
+    if(finalSymbol === 1){
+      // eslint-disable-next-line
+      const result = eval(finalEquation) < rhs;
+      window.alert("the result is - " + result );
+    }
+    if(finalSymbol === 2){
+      // eslint-disable-next-line
+      const result = eval(finalEquation) > rhs;
+      window.alert("the result is - " + result );
+    }
+    if(finalSymbol ===0){
+      window.alert("please provide the comparizon symbol (< >)");
+    }
   }
 
   return (
@@ -154,6 +167,15 @@ function App() {
       </div>
       <div className="evaluate" onClick={(e)=> handelEvaluate(e)}>
             Evaluate 
+      </div>
+      <div className="info">
+        <h2>vlaues crossponding to alphabets </h2>
+        {alphaList.map((item, index)=> (
+          <div className="infoItem">
+          {item} 
+          <div>{alphaValue[index]}</div>
+          </div>
+        ))}
       </div>
     </div>
   );
